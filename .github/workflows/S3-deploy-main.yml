@@ -1,0 +1,40 @@
+name: Deploy Static Website to S3 (Dev & Prod)
+
+on:
+  push:
+    branches:
+      - dev   # Trigger when pushing to dev branch
+      - main  # Trigger when pushing to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Deploy to Development (only runs on dev branch)
+      - name: Deploy to Development S3
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "🚀 Starting deployment to Development..."
+          aws s3 sync . s3://${{ secrets.S3_BUCKET_DEV }} --delete --exact-timestamps
+          echo "✅ Deployment to Development completed!"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.S3_BUCKET_REGION }}
+
+      # Step 3: Deploy to Production (only runs on main branch)
+      - name: Deploy to Production S3
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "🚀 Starting deployment to Production..."
+          aws s3 sync . s3://${{ secrets.S3_BUCKET_PROD }} --delete --exact-timestamps
+          echo "✅ Deployment to Production completed!"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.S3_BUCKET_REGION }}
